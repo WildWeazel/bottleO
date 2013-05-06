@@ -74,7 +74,6 @@ public class EventListener implements Listener {
 
 				int totalCost = initialAmount*XP_PER_BOTTLE;
 				PlayerInventory inventory = p.getInventory();
-				int newTotalXP;
 
 				//sanity checking
 				if (XP_PER_BOTTLE > 0 && initialAmount > 0 && initialAmount <= 64) {
@@ -89,17 +88,29 @@ public class EventListener implements Listener {
 
 					//if there is enough xp and bottles
 					if (amount > 0) {
-						//bottleO.log.info("Creating " + amount + "XP bottles");
 						//remove some glass bottles from hand
 						ItemStack stack = p.getItemInHand();
 						stack.setAmount(initialAmount-amount);
 						p.setItemInHand(stack);
 
-						//set the new xp value
-						newTotalXP = totalXP - totalCost;
+						//find the new xp value
+						final int newTotalXP = totalXP - totalCost;
+						int xpToGive = newTotalXP;
+
+
+						// apparently setting the total XP does not update level calculation and vice versa. we'll do it live.
+						int level = 0;
 						p.setTotalExperience(0);
+						p.setLevel(level);
+						p.setExp(0);
+
+						while(p.getExpToLevel() <= xpToGive) {
+							xpToGive -= p.getExpToLevel();
+							p.setLevel(++level);
+						}
+						float remainder = (float)xpToGive/p.getExpToLevel();
+						p.setExp(remainder);
 						p.setTotalExperience(newTotalXP);
-						//bottleO.log.info("Used " + totalCost + " of " + totalXP + " XP");
 
 						//try to put xp bottles in inventory
 						HashMap<Integer, ItemStack> hash = inventory.addItem(new ItemStack(Material.EXP_BOTTLE, amount));
@@ -117,8 +128,16 @@ public class EventListener implements Listener {
 						playerWaitHash.put(p.getName(), System.currentTimeMillis());
 						//add slowness potion effect because it looks cool
 						p.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, 40, 3));
-						bottleO.log.info("bottleO: "+p.getName()+", init:"+totalXP+", final:"+newTotalXP+", cost:"+totalCost+", bottles:"+(totalCost/XP_PER_BOTTLE));
-					}
+
+						// log it all for sanity
+						StringBuilder sb = new StringBuilder();
+						sb.append("bottleO lite: ").append(p.getName())
+							.append(", init: ").append(totalXP)
+							.append(", final: ").append(p.getTotalExperience())
+							.append(" (level ").append(p.getLevel() + p.getExp()).append(")")
+							.append(", cost:").append(totalCost)
+							.append(", bottles: ").append(amount);
+						bottleO.log.info(sb.toString());					}
 				}
 			}
 		}
