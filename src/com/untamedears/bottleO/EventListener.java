@@ -2,7 +2,6 @@ package com.untamedears.bottleO;
 
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.Random;
 
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
@@ -11,6 +10,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.ExpBottleEvent;
+import org.bukkit.event.player.PlayerExpChangeEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerLoginEvent;
 import org.bukkit.inventory.ItemStack;
@@ -20,10 +20,9 @@ import org.bukkit.potion.PotionEffectType;
 
 public class EventListener implements Listener {
 
-	protected static int XP_PER_BOTTLE = 25;
+	protected static int XP_PER_BOTTLE = 10;
 	protected static long WAIT_TIME_MILLIS = 5000;
-	protected static int MAX_BOOKSHELVES = 30;
-	protected static Random rand;
+	protected static boolean DISABLE_EXPERIENCE=true;
 	//cool-down timers
 	protected static HashMap<String,Long> playerWaitHash = new HashMap<String,Long>(100);
 
@@ -36,9 +35,25 @@ public class EventListener implements Listener {
 	//change xp yield from bottle
 	@EventHandler(priority=EventPriority.HIGHEST)
 	public void onExpBottleEvent(ExpBottleEvent e) {
-		e.setExperience(XP_PER_BOTTLE);
+		if(DISABLE_EXPERIENCE)
+		{
+			((Player) e.getEntity().getShooter()).giveExp(XP_PER_BOTTLE);
+			e.setExperience(0);
+		}
+		else
+		{
+			e.setExperience(XP_PER_BOTTLE);
+		}
 	}
-
+		@EventHandler
+	public void onPlayerExpChangeEvent(PlayerExpChangeEvent j)
+	{
+		if(DISABLE_EXPERIENCE)
+		{
+			j.setAmount(0);			
+		}		
+	}
+	
 	//generate xp bottles
 	@EventHandler(priority=EventPriority.HIGHEST, ignoreCancelled = true)
 	public void onPlayerInteractEvent(PlayerInteractEvent e) {
