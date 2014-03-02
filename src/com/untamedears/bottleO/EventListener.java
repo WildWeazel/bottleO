@@ -2,6 +2,7 @@ package com.untamedears.bottleO;
 
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.logging.Level;
 
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
@@ -20,9 +21,12 @@ import org.bukkit.potion.PotionEffectType;
 
 public class EventListener implements Listener {
 
-	protected static int XP_PER_BOTTLE = 10;
+	// 1 stack of bottles for 832 xp, just enough for lvl 30
+	protected static int XP_PER_BOTTLE = 13;
+	// cool down time between bottling events, just to be safe
 	protected static long WAIT_TIME_MILLIS = 5000;
-	protected static boolean DISABLE_EXPERIENCE=true;
+	// if true, block all xp except from bottles
+	protected static boolean DISABLE_EXPERIENCE=false;
 	//cool-down timers
 	protected static HashMap<String,Long> playerWaitHash = new HashMap<String,Long>(100);
 
@@ -45,7 +49,8 @@ public class EventListener implements Listener {
 			e.setExperience(XP_PER_BOTTLE);
 		}
 	}
-		@EventHandler
+		
+	@EventHandler
 	public void onPlayerExpChangeEvent(PlayerExpChangeEvent j)
 	{
 		if(DISABLE_EXPERIENCE)
@@ -141,18 +146,21 @@ public class EventListener implements Listener {
 
 						//restart cool-down timer
 						playerWaitHash.put(p.getName(), System.currentTimeMillis());
-						//add slowness potion effect because it looks cool
+						//add potion effect because it looks cool
 						p.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, 40, 3));
 
 						// log it all for sanity
-						StringBuilder sb = new StringBuilder();
-						sb.append("bottleO lite: ").append(p.getName())
-							.append(", init: ").append(totalXP)
-							.append(", final: ").append(p.getTotalExperience())
-							.append(" (level ").append(p.getLevel() + p.getExp()).append(")")
-							.append(", cost:").append(totalCost)
-							.append(", bottles: ").append(amount);
-						bottleO.log.info(sb.toString());					}
+						if(bottleO.log.isLoggable(Level.FINE)) {
+							StringBuilder sb = new StringBuilder();
+							sb.append("bottleO lite: ").append(p.getName())
+								.append(", init: ").append(totalXP)
+								.append(", final: ").append(p.getTotalExperience())
+								.append(" (level ").append(p.getLevel() + p.getExp()).append(")")
+								.append(", cost:").append(totalCost)
+								.append(", bottles: ").append(amount);
+							bottleO.log.fine(sb.toString());
+						}						
+					}
 				}
 			}
 		}
